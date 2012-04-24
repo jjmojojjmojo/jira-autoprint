@@ -5,6 +5,7 @@ Attempting to use Platypus for this purpose.
 """
 import cups, os
 from datetime import datetime
+import reportlab.graphics
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Frame, Table, TableStyle
 from reportlab.platypus.flowables import Flowable, XBox, Image
 from reportlab.pdfgen.canvas import Canvas 
@@ -13,6 +14,8 @@ from reportlab.rl_config import defaultPageSize
 from reportlab.lib.units import inch 
 from reportlab.pdfbase.pdfmetrics import stringWidth, getFont
 from reportlab.lib.colors import pink, black, red, blue, green, lightgrey, darkgrey
+from StringIO import StringIO
+from pyPdf import PdfFileWriter, PdfFileReader
 
 def add_card(canvas, story_info, page_width, page_height):
     styles = getSampleStyleSheet()
@@ -38,21 +41,21 @@ def add_card(canvas, story_info, page_width, page_height):
     canvas.rect(1, 1, page_width-2, page_height-2, stroke=1, fill=0)
     
     # label the checkbox arrays with a rotated text label
-    canvas.saveState()
-    canvas.setFillColor((0.9, 0.9, 0.9))
-    canvas.setFont('Helvetica-Bold', 20)
-    canvas.translate(margin*2, margin*2)
-    canvas.rotate(25)
-    canvas.drawString(0, -10, "INTERRUPTED")
-    canvas.restoreState()
-    
-    canvas.saveState()
-    canvas.setFillColor((0.9, 0.9, 0.9))
-    canvas.setFont('Helvetica-Bold', 20)
-    canvas.translate(frame_width/2+(inch*0.6), margin*2)
-    canvas.rotate(25)
-    canvas.drawString(0, -10, "BLOCKED")
-    canvas.restoreState()
+    # canvas.saveState()
+    # canvas.setFillColor((0.9, 0.9, 0.9))
+    # canvas.setFont('Helvetica-Bold', 20)
+    # canvas.translate(margin*2, margin*2)
+    # canvas.rotate(25)
+    # canvas.drawString(0, -10, "INTERRUPTED")
+    # canvas.restoreState()
+    # 
+    # canvas.saveState()
+    # canvas.setFillColor((0.9, 0.9, 0.9))
+    # canvas.setFont('Helvetica-Bold', 20)
+    # canvas.translate(frame_width/2+(inch*0.6), margin*2)
+    # canvas.rotate(25)
+    # canvas.drawString(0, -10, "BLOCKED")
+    # canvas.restoreState()
     
     ######### use a table to hold the header
     #
@@ -229,19 +232,19 @@ def add_card(canvas, story_info, page_width, page_height):
     
     # use translate to get the checkboxes to always render at the bottom of the
     # page, even if the summary text is short.
-    checkboxes_width, checkboxes_height  = checkboxes.wrap(frame_width, frame_height)
-    story_width, story_height  = story.wrap(frame_width, frame_height)
-    
-    canvas.saveState()
-    canvas.translate(0, checkboxes_height)
-    main.addFromList([checkboxes,], canvas)
-    canvas.restoreState()
+    # checkboxes_width, checkboxes_height  = checkboxes.wrap(frame_width, frame_height)
+    # story_width, story_height  = story.wrap(frame_width, frame_height)
+    # 
+    # canvas.saveState()
+    # canvas.translate(0, checkboxes_height)
+    # main.addFromList([checkboxes,], canvas)
+    # canvas.restoreState()
     
     canvas.showPage()
 
 
 if __name__ == '__main__':
-    output = "card.pdf"
+    output = StringIO()
     
     # 5 x 3 index card size
     page_width = 5*inch
@@ -249,20 +252,45 @@ if __name__ == '__main__':
     canvas = Canvas(output, pagesize=(page_width, page_height))
     
     story_info = {
-        'summary': "Build a cool automatic printing system.",
-        'detail': "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas consequat bibendum est, non fermentum risus tincidunt at. Etiam auctor odio sit amet massa dignissim ullamcorper. Fusce imperdiet orci sed velit dictum non tempor est lacinia. Vestibulum faucibus augue felis. Cras eget metus vitae erat luctus iaculis at fermentum dolor. Vestibulum enim eros, hendrerit eu euismod sed, tristique vel mauris. Praesent nec iaculis nibh. Sed et augue id metus gravida facilisis et eu tellus. Aenean a erat ut augue molestie cursus et in nuncanvas. Phasellus odio elit, tincidunt et pharetra commodo, accumsan a nisi. Suspendisse posuere vestibulum nibh, eu fermentum ante sodales et. Sed quis ante quam, at pharetra felis. Praesent tincidunt, velit nec molestie euismod, diam dolor tempor eros, at gravida elit sapien ornare est.",
-        'id': 'CI-999',
+        'summary': "Install Perl module TAP::Harness::JUnit on development environment",
+        'detail': """
+        We, the Legacy team, want to begin using Bamboo to run our unit tests when committing code.  As I understand it, Bamboo needs the tests to output results in an XML format.  In my research, the only way to do this is by using TAP::Harness::JUnit.
+        
+        So, please install TAP::Harness::JUnit on daisy2, my development server.  If this does work the way I think, the module will need to be installed on the server that Bamboo will use to run the unit tests.
+        """,
+        'id': 'CI-687',
         'type': "Operational Task",
-        'reporter': 'Bob Dobbalina',
+        'reporter': 'Rob Reece',
         'date': datetime.now(),
         'icon': 'agt_utilities.png',
     }
     
-    story_info['formatted_date'] = story_info['date'].strftime('%m/%d @ %I:%M %p')
+    # story_info['formatted_date'] = story_info['date'].strftime('%m/%d @ %I:%M %p')
+    story_info['formatted_date'] = "4/25 @ 12:23PM"
     
     add_card(canvas, story_info, page_width, page_height);
     
     canvas.save()
+    
+    output.seek(0)
+    
+    working = PdfFileReader(output)
+    background = PdfFileReader(file('kanban card background.pdf'))
+    
+    to_save = PdfFileWriter()
+    
+    main_page = background.getPage(0)
+    
+    main_page.rotateClockwise(90)
+    
+    main_page.mergePage(working.getPage(0))
+    
+    to_save.addPage(main_page)
+    
+    outputStream = file("document-output.pdf", "wb")
+    to_save.write(outputStream)
+    outputStream.close()
+    
 
 
 
