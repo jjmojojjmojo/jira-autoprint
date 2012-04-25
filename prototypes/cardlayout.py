@@ -29,12 +29,6 @@ def add_card(canvas, story_info, page_width, page_height):
     # the whole printable area
     main = Frame(margin, margin, frame_width, frame_height, showBoundary=0, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0)
     
-    # the footer, where the checkboxes go
-    footer = Frame(margin, margin, frame_width, 2*inch, showBoundary=0, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0)
-    
-    # the footer, where the checkboxes go
-    footer = Frame(margin, margin, frame_width, 2*inch, showBoundary=0, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0)
-    
     ###### drop in a few background elements
     #
     
@@ -239,7 +233,7 @@ def add_card(canvas, story_info, page_width, page_height):
     story_width, story_height  = story.wrap(frame_width, frame_height)
     
     canvas.saveState()
-    canvas.translate(0, 0)
+    canvas.translate(0, checkboxes_height)
     main.addFromList([checkboxes,], canvas)
     canvas.restoreState()
     
