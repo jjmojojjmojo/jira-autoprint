@@ -22,6 +22,36 @@ from datetime import datetime
 from twisted.internet.threads import deferToThread
 from twisted.internet import defer
 
+# quick and dirty way to associate my own icons with 
+# jira types
+icons = {
+    'Operational Task': 'cards-heart.png',
+    'Task': 'agt_utilities.png',
+    'Story': 'agt_utilities.png',
+    'Epic': 'agt_utilities.png',
+    'Improvement': 'agt_utilities.png',
+    'Bug': 'tools-report-bug.png',
+    'Unknown': 'agt_utilities.png',
+}
+
+priority_icons = {
+    'Blocker': 'software-update-urgent-2.png',
+    'Critical': 'emblem-important-3.png',
+    'Major': 'emblem-special.png',
+    'Minor': 'emblem-generic.png',
+    'Trivial': 'emblem-generic.png',
+    'Unknown': 'face-uncertain.png',
+}
+
+priority_colors = {
+    'Blocker': '#F56C6C',
+    'Critical':  '#F56C6C',
+    'Major':  '#EEEEEE',
+    'Minor': '#CEE8F0',
+    'Trivial': '#CEE8F0',
+    'Unknown': '#FFFFFF',
+}
+
 class JIRAConsumer(object):
     """
     Callable that will get a list of issues from JIRA (via a filter), and stash them
@@ -86,10 +116,13 @@ class JIRAConsumer(object):
             issue types
             priorities
         """
-        d = self.proxy.callRemote('jira1.getIssueTypes', self.auth)
-        d.addCallback(self.process_issue_types)
-        d = self.proxy.callRemote('jira1.getPriorities', self.auth)
-        d.addCallback(self.process_priorities)
+        
+        d1 = self.proxy.callRemote('jira1.getIssueTypes', self.auth)
+        d1.addCallback(self.process_issue_types)
+        d2 = self.proxy.callRemote('jira1.getPriorities', self.auth)
+        d2.addCallback(self.process_priorities)
+        
+        return defer.DeferredList([d1, d2])
         
     
     def set_auth_token(self, token):
@@ -204,11 +237,6 @@ class JIRAConsumer(object):
         
         print >>sys.stdout, "Printing %s cards" % (len(issues))
         
-        for issue in issues:
-            reporter = self.users.get(issue['reporter'], "UNKNOWN")
-            print >>sys.stdout, issue['reporter']
-            print >>sys.stdout, pprint.pformat(reporter)
-        
         sys.stdout.flush()
         
         output_file = datetime.now().strftime("%Y%m%d-%H%M%S")+'.pdf'
@@ -219,14 +247,27 @@ class JIRAConsumer(object):
         canvas = Canvas(output_file, pagesize=(page_width, page_height))  
         
         for issue in issues:
+            
+            print >>sys.stdout, pprint.pformat(issue)
+            sys.stdout.flush()
+            
+            issue_type = self.types.get(issue['type'], 'Unknown')
+            icon = icons[issue_type]
+            
+            issue_priority = self.priorities.get(issue['priority'], 'Unknown')
+            priority_icon = priority_icons[issue_priority]
+            priority_color = priority_colors[issue_priority]
+            
             story_info = {
                 'summary': issue['summary'],
-                'detail': issue['description'],
+                'detail': issue.get('description', None),
                 'id': issue['key'],
-                'type': self.types.get(issue['type'], 'Unknown'),
+                'type': issue_type,
                 'reporter': self.users[issue['reporter']]['fullname'],
                 'date': datetime.strptime(issue['created'], "%Y-%m-%d %H:%M:%S.0"),
-                'icon': 'agt_utilities.png',
+                'icon': icon,
+                'priority_icon': priority_icon,
+                'header_bg_color': priority_color,
             }
             
             story_info['formatted_date'] = story_info['date'].strftime('%m/%d @ %I:%M %p')
@@ -241,6 +282,13 @@ class JIRAConsumer(object):
         error.printBriefTraceback()
         # print >>sys.stdout, "ERROR"
         # sys.stdout.flush()
+    
+    def cull_db(self):
+        """
+        Get rid of cached issues that are more than a week old
+        
+        @TODO: this could be very slow - this might be a good case for switching to sqlite.
+        """
         
     def __call__(self):
         d = self.proxy.callRemote('jira1.getIssuesFromFilter', self.auth, self.filter_id)
@@ -257,7 +305,9 @@ settings = json.load(file('settings.json', 'rb'))
 if not settings['password']:
     settings['password'] = getpass("Please enter your JIRA password: ")
 
-l = task.LoopingCall(JIRAConsumer(**settings))
+job = JIRAConsumer(**settings)
+
+l = task.LoopingCall(job)
 l.start(settings['interval'])
 
 reactor.run()
