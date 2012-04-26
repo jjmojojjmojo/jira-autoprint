@@ -265,7 +265,7 @@ class JIRAConsumer(object):
             
             story_info = {
                 'summary': issue['summary'],
-                'detail': issue.get('description', None),
+                'detail': issue.get('description', ''),
                 'id': issue['key'],
                 'type': issue_type,
                 'reporter': self.users[issue['reporter']]['fullname'],
@@ -280,6 +280,9 @@ class JIRAConsumer(object):
             add_card(canvas, story_info, page_width, page_height);
         
         canvas.save()
+        
+        print >>sys.stdout, "Wrote %s" % (output_file)
+        sys.stdout.flush()
         
         return output_file
         
