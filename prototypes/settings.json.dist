@@ -1,0 +1,8 @@
+{
+  "host": "my.jira.host",
+  "username": "me",
+  "password": "secret!",
+  "filter_id": "12328",
+  "interval": 60,
+  "db_file": "jira_cache.dbm"
+}
