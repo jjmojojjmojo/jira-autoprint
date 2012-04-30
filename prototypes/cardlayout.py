@@ -16,6 +16,7 @@ from reportlab.pdfbase.pdfmetrics import stringWidth, getFont
 from reportlab.lib.colors import pink, black, red, blue, green, lightgrey, darkgrey
 from StringIO import StringIO
 from pyPdf import PdfFileWriter, PdfFileReader
+from svglib.svglib import svg2rlg
 
 def add_card(canvas, story_info, page_width, page_height):
     styles = getSampleStyleSheet()
@@ -34,6 +35,10 @@ def add_card(canvas, story_info, page_width, page_height):
     
     ###### drop in a few background elements
     #
+    
+    # drop in a prebuild bg from an SVG file
+    background = svg2rlg("kanban card background.svg")
+    reportlab.graphics.renderPDF.draw(background, canvas, 0, 0)
     
     # add a border around the whole page to make it easier to cut out of a full
     # sheet of paper
@@ -244,7 +249,13 @@ def add_card(canvas, story_info, page_width, page_height):
 
 
 if __name__ == '__main__':
-    output = StringIO()
+    ##############################
+    # New method is to use svglib to render an SVG background behind the card
+    #
+    # Old method - use pypdf to render an existing PDF behind the card
+    #
+    # 
+    output = 'card.pdf'
     
     # 5 x 3 index card size
     page_width = 5*inch
@@ -271,27 +282,5 @@ if __name__ == '__main__':
     add_card(canvas, story_info, page_width, page_height);
     
     canvas.save()
-    
-    output.seek(0)
-    
-    working = PdfFileReader(output)
-    background = PdfFileReader(file('kanban card background.pdf'))
-    
-    to_save = PdfFileWriter()
-    
-    main_page = background.getPage(0)
-    
-    main_page.rotateClockwise(90)
-    
-    main_page.mergePage(working.getPage(0))
-    
-    to_save.addPage(main_page)
-    
-    outputStream = file("document-output.pdf", "wb")
-    to_save.write(outputStream)
-    outputStream.close()
-    
-
-
-
-
+   
+   
