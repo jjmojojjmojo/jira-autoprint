@@ -90,11 +90,12 @@ class JIRAConsumer(object):
         self.proxy = Proxy('https://%s/jira/rpc/xmlrpc' % (self.host), self.username, self.password, allowNone=True)
         
         # log in, stash the auth token
-        d = self.proxy.callRemote('jira1.login', self.username, self.password)
-        d.pause()
-        d.addCallback(self.set_auth_token)
-        d.addCallback(self.load_lookups)
-        d.unpause()
+        d1 = self.proxy.callRemote('jira1.login', self.username, self.password)
+        d1.pause()
+        d1.addCallback(self.set_auth_token)
+        d1.addCallback(self.load_lookups)
+        d1.unpause()
+        
     
     def process_issue_types(self, issue_types):
         types = {}
@@ -161,6 +162,7 @@ class JIRAConsumer(object):
         for issue in issues:
             existing = self.db.get(issue['key'], None)
             if not existing:
+                print >>sys.stdout, "%s is not in the db" % (issue['key'])
                 changed.append(issue)
                 continue
             else:
@@ -174,6 +176,7 @@ class JIRAConsumer(object):
                 comp = {k:v for k,v in issue.viewitems() if k in self.trigger_keys}
                 
                 if subject != comp:
+                    print >>sys.stdout, "%s has changed" % (issue['key'])
                     changed.append(issue)
         
         print >>sys.stdout, "%s cards changed" % (len(changed))
@@ -197,6 +200,8 @@ class JIRAConsumer(object):
             d = self.proxy.callRemote('jira1.getUser', self.auth, issue['reporter'])
             d.addCallback(self.update_user)
             return d
+        else:
+            return user
     
     def update_users(self, issues):
         """
@@ -239,7 +244,7 @@ class JIRAConsumer(object):
         
         sys.stdout.flush()
         
-        output_file = datetime.now().strftime("%Y%m%d-%H%M%S")+'.pdf'
+        output_file = datetime.now().strftime("%Y-%m-%d-%H%M%S")+'.pdf'
         
         # 5 x 3 index card size
         page_width = 5*inch
@@ -248,8 +253,8 @@ class JIRAConsumer(object):
         
         for issue in issues:
             
-            print >>sys.stdout, pprint.pformat(issue)
-            sys.stdout.flush()
+            # print >>sys.stdout, pprint.pformat(issue)
+            # sys.stdout.flush()
             
             issue_type = self.types.get(issue['type'], 'Unknown')
             icon = icons[issue_type]
@@ -260,7 +265,7 @@ class JIRAConsumer(object):
             
             story_info = {
                 'summary': issue['summary'],
-                'detail': issue.get('description', None),
+                'detail': issue.get('description', ''),
                 'id': issue['key'],
                 'type': issue_type,
                 'reporter': self.users[issue['reporter']]['fullname'],
@@ -275,6 +280,9 @@ class JIRAConsumer(object):
             add_card(canvas, story_info, page_width, page_height);
         
         canvas.save()
+        
+        print >>sys.stdout, "Wrote %s" % (output_file)
+        sys.stdout.flush()
         
         return output_file
         
@@ -292,10 +300,12 @@ class JIRAConsumer(object):
         
     def __call__(self):
         d = self.proxy.callRemote('jira1.getIssuesFromFilter', self.auth, self.filter_id)
+        d.pause()
         d.addErrback(self.jira_error)
         d.addCallback(self.process)
         d.addCallback(self.update_users)
         d.addCallback(self.print_cards)
+        d.unpause()
         
         
         

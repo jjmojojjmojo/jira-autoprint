@@ -18,7 +18,7 @@ from StringIO import StringIO
 from pyPdf import PdfFileWriter, PdfFileReader
 from svglib.svglib import svg2rlg
 
-def add_card(canvas, story_info, page_width, page_height):
+def add_card(canvas, story_info, page_width, page_height, border=False):
     styles = getSampleStyleSheet()
     styles['Normal'].fontName = "Helvetica"
     styles['BodyText'].fontSize = 12
@@ -42,8 +42,9 @@ def add_card(canvas, story_info, page_width, page_height):
     
     # add a border around the whole page to make it easier to cut out of a full
     # sheet of paper
-    canvas.setLineWidth(0.5)
-    canvas.rect(1, 1, page_width-2, page_height-2, stroke=1, fill=0)
+    if border:
+        canvas.setLineWidth(0.5)
+        canvas.rect(1, 1, page_width-2, page_height-2, stroke=1, fill=0)
     
     # label the checkbox arrays with a rotated text label
     canvas.saveState()
