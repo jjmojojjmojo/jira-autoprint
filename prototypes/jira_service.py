@@ -257,11 +257,11 @@ class JIRAConsumer(object):
             # sys.stdout.flush()
             
             issue_type = self.types.get(issue['type'], 'Unknown')
-            icon = icons[issue_type]
+            icon = icons.get(issue_type, icons['Unknown'])
             
             issue_priority = self.priorities.get(issue['priority'], 'Unknown')
-            priority_icon = priority_icons[issue_priority]
-            priority_color = priority_colors[issue_priority]
+            priority_icon = priority_icons.get(issue_priority, priority_icons['Unknown'])
+            priority_color = priority_colors.get(issue_priority, priority_colors['Unknown'])
             
             story_info = {
                 'summary': issue['summary'],
