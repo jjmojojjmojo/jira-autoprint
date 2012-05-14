@@ -13,6 +13,11 @@ var
 sdist
 develop-eggs
 .installed.cfg
+Icon?
+Thumbs.db
+.DS_Store
+etc
+www
 
 # Installer logs
 pip-log.txt
@@ -29,3 +34,11 @@ pip-log.txt
 
 # OpenOffice.org temp files
 .~*
+
+# inkscape temp files
+._*
+
+# Jedit temp files
+*~
+
+
