@@ -1,0 +1,12 @@
+<form method="post">
+Available Renderers:
+
+<dl>
+{% for renderer in renderers %}
+    <dt>{{renderer}}</dt>
+    <dd>{{renderers[renderer].title}}</dd>
+{% else %} 
+No Renderers Found.
+{% endfor %}
+</dl>
+</form>

@@ -89,7 +89,7 @@ class CUPSPrinterFactory(HTTPFactory):
         
         self._connection = cups.Connection()
         
-        self._printFile('card.pdf')
+        # self._printFile('card.pdf')
     
     def _getStatus(self):
         """

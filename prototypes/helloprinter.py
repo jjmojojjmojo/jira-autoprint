@@ -121,7 +121,8 @@ try:
     
     print_centered_text(c, "Printed From Python", page_width, page_height, font, size)
     
-    c.showPage()
+    
+    c.showPage()
     c.save()
     
     
