@@ -1,8 +1,6 @@
-from zope.interface import Interface, implements, Attribute
-import zope.schema, zope.component
-from zope.component.factory import Factory, IFactory
-
 import tempfile
+from zope.interface import implements
+import colander, deform
 
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Frame, Table, TableStyle, KeepInFrame
 from reportlab.platypus.flowables import XBox, Image
@@ -14,77 +12,85 @@ from reportlab.pdfbase.pdfmetrics import stringWidth, getFont
 from reportlab.lib.colors import pink, black, red, blue, green, lightgrey, darkgrey
 
 from .util import PullBox
+
 from . import IRenderer
+
+ISSUE_TYPES = (
+    u'Operational Task',
+    u'Task'
+    u'Story'
+    u'Epic'
+    u'Improvement',
+    u'Bug',
+    u'Unknown',
+)
+
+ISSUE_PRIORITIES = (
+    u'Blocker',
+    u'Critical',
+    u'Major',
+    u'Minor',
+    u'Trivial',
+    u'Unknown',
+)
 
 class IIssueCardRenderer(IRenderer):
     """
     Generic issue/bug/task on an index card.
-    
-    :todo: migrate the Choice fields to use the settings attribute as a vocabulary.
     """
-    summary = zope.schema.Text(
+
+class IssueCardRendererSchema(colander.MappingSchema):
+    summary = colander.SchemaNode(
+        colander.String(),
         title=u"Summary",
         description=u"A one-sentence description of the issue",
-        default=u"",
     )
     
-    detail = zope.schema.Text(
+    detail = colander.SchemaNode(
+        colander.String(),
         title=u"Details",
         description=u"Elaborated details about the issue.",
-        default=u"",
     )
     
-    issue_id = zope.schema.TextLine(
+    issue_id = colander.SchemaNode(
+        colander.String(),
         title=u"Identifier",
         description=u"A (probably) unique identifier that this issue is known by",
-        default=u"",
     )
     
-    issue_type = zope.schema.Choice(
-        values=(
-            u'Operational Task',
-            u'Task'
-            u'Story'
-            u'Epic'
-            u'Improvement',
-            u'Bug',
-            u'Unknown',
-        ),
-        title=u"Issue Type",
-        description=u"The type of issue.",
-        default=u"Unknown",
+    issue_type = colander.SchemaNode(
+        colander.String(), 
+        validator=colander.OneOf(ISSUE_TYPES),
+        missing = u'Unknown',
     )
     
-    reporter = zope.schema.TextLine(
+    reporter = colander.SchemaNode(
+        colander.String(),
         title=u"Reporter",
         description=u"The name of the person who reported this issue",
-        default=u"Unknown",
     )
     
-    date = zope.schema.Datetime(
+    date = colander.SchemaNode(
+        colander.DateTime(),
         title=u"Date",
         description=u"The date/time that the issue was created, or modified",
     )
     
-    priority = zope.schema.Choice(
-        values=(
-            u'Blocker',
-            u'Critical',
-            u'Major',
-            u'Minor',
-            u'Trivial',
-            u'Unknown',
-        ),
+    priority = colander.SchemaNode(
+        colander.String(), 
+        validator=colander.OneOf(ISSUE_PRIORITIES),
         title=u"Priority",
         description=u"How urgent is this issue?",
-        default=u"Unknown",
+        missing = u'Unknown',
     )
     
-    border = zope.schema.Bool(
+    border = colander.SchemaNode(
+        colander.Boolean(), 
         title=u"Draw Border?",
         description=u"Should a border be drawn around the perimeter of the card?",
-        default=True,
+        missing = True,
     )
+
 
 class IssueCardRenderer:
     """
@@ -92,27 +98,27 @@ class IssueCardRenderer:
     system.
     """
     
-    implements(IIssueCardRenderer)
+    schema = IssueCardRendererSchema()
     
     title = "Generic Issue/Bug/Story"
     settings = {
         'icons': {
-            'Operational Task': 'images/cards-heart.png',
-            'Task': 'images/agt_utilities.png',
-            'Story': 'images/agt_utilities.png',
-            'Epic': 'images/agt_utilities.png',
-            'Improvement': 'images/agt_utilities.png',
-            'Bug': 'images/tools-report-bug.png',
-            'Unknown': 'images/agt_utilities.png',
+            'Operational Task': '/home/jj/Projects/jira-autoprint/prototypes/print_service_restful/images/cards-heart.png',
+            'Task': '/home/jj/Projects/jira-autoprint/prototypes/print_service_restful/images/agt_utilities.png',
+            'Story': '/home/jj/Projects/jira-autoprint/prototypes/print_service_restful/images/agt_utilities.png',
+            'Epic': '/home/jj/Projects/jira-autoprint/prototypes/print_service_restful/images/agt_utilities.png',
+            'Improvement': '/home/jj/Projects/jira-autoprint/prototypes/print_service_restful/images/agt_utilities.png',
+            'Bug': '/home/jj/Projects/jira-autoprint/prototypes/print_service_restful/images/tools-report-bug.png',
+            'Unknown': '/home/jj/Projects/jira-autoprint/prototypes/print_service_restful/images/agt_utilities.png',
         },
         
         'priority_icons': {
-            'Blocker': 'images/software-update-urgent-2.png',
-            'Critical': 'images/emblem-important-3.png',
-            'Major': 'images/emblem-special.png',
-            'Minor': 'images/emblem-generic.png',
-            'Trivial': 'images/emblem-generic.png',
-            'Unknown': 'images/face-uncertain.png',
+            'Blocker': '/home/jj/Projects/jira-autoprint/prototypes/print_service_restful/images/software-update-urgent-2.png',
+            'Critical': '/home/jj/Projects/jira-autoprint/prototypes/print_service_restful/images/emblem-important-3.png',
+            'Major': '/home/jj/Projects/jira-autoprint/prototypes/print_service_restful/images/emblem-special.png',
+            'Minor': '/home/jj/Projects/jira-autoprint/prototypes/print_service_restful/images/emblem-generic.png',
+            'Trivial': '/home/jj/Projects/jira-autoprint/prototypes/print_service_restful/images/emblem-generic.png',
+            'Unknown': '/home/jj/Projects/jira-autoprint/prototypes/print_service_restful/images/face-uncertain.png',
         },
         
         'priority_colors': {
@@ -139,6 +145,8 @@ class IssueCardRenderer:
         self.settings.update(settings)
         
         junk, self.output = tempfile.mkstemp(suffix=".pdf")
+        
+        
      
     def _getStyleSheet(self):
         """
@@ -158,6 +166,7 @@ class IssueCardRenderer:
         """
         icon = self.settings['icons'].get(data['issue_type'], self.settings['icons']['Unknown'])
         priority_icon = self.settings['priority_icons'].get(data['priority'], self.settings['priority_icons']['Unknown'])
+        priority_color = self.settings['priority_colors'].get(data['priority'], self.settings['priority_colors']['Unknown'])
         
         styles = self._getStyleSheet()
         
@@ -208,14 +217,14 @@ class IssueCardRenderer:
             [ 
               Image(icon, inch*0.4, inch*0.4),
               [
-               Paragraph('<para size="18"><b>%(id)s</b></para>' % story_info, styles['BodyText']), 
+               Paragraph('<para size="18"><b>%(issue_id)s</b></para>' % data, styles['BodyText']), 
                Spacer(1,2),
-               Paragraph('<para size="8">%(type)s</para>' % story_info, styles['BodyText']),
+               Paragraph('<para size="8">%(issue_type)s</para>' % data, styles['BodyText']),
               ],
               [
-               Paragraph('<para size="16" alignment="center"><u>%(reporter)s</u></para>' % story_info, styles['BodyText']),  
+               Paragraph('<para size="16" alignment="center"><u>%(reporter)s</u></para>' % data, styles['BodyText']),  
                Spacer(1,2),
-               Paragraph('<para size="10" alignment="center"><b>Opened: %(formatted_date)s</b></para>' % story_info, styles['BodyText']), 
+               Paragraph('<para size="10" alignment="center"><b>Opened: %s</b></para>' % data['date'].strftime('%m/%d @ %I:%M %p'), styles['BodyText']), 
               ],
               # XBox(inch*0.4, inch*0.4, ""),
               Image(priority_icon, inch*0.4, inch*0.4),
@@ -230,7 +239,7 @@ class IssueCardRenderer:
             ('RIGHTPADDING',    (0,0),  (-1,-1),  3),
             ('TOPPADDING',      (0,0),  (-1,-1),  3),
             ('BOTTOMPADDING',   (0,0),  (-1,-1),  3),
-            ('BACKGROUND',      (0,0),  (-1,-1), story_info['header_bg_color']),
+            ('BACKGROUND',      (0,0),  (-1,-1), priority_color),
             ('BOX',             (0,0),  (-1,-1), 0.5, black),
             # exceptions for the first cell
             ('ALIGNMENT',       (0,0),  (0,0),  'LEFT'), 
@@ -315,7 +324,3 @@ class IssueCardRenderer:
         
         return self.output
 
-# register the factories in the component architecture.
-factory = Factory(IssueCardRenderer, 'Generic Issue Card Renderer', IssueCardRenderer.__doc__)
-
-zope.component.provideUtility(factory, IFactory, 'issuecardrenderer')

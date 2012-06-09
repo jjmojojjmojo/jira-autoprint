@@ -1,12 +1,70 @@
-<form method="post">
-Available Renderers:
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
 
-<dl>
+<head>
+    <title>
+        AutoPrint - Print A Document
+    </title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <link type="text/css" href="/deform/css/form.css" rel="stylesheet" />
+    <link type="text/css" href="/deform/css/ui-lightness/jquery-ui-1.8.11.custom.css" rel="stylesheet" />
+    
+    <script src="/deform/scripts/jquery-1.7.2.min.js" type="text/javascript"></script>
+    <script src="/deform/scripts/jquery.form-3.09.js" type="text/javascript"></script>
+    <script src="/deform/scripts/deform.js" type="text/javascript"></script>
+    <script src="/deform/scripts/jquery-ui-1.8.11.custom.min.js" type="text/javascript"></script>
+    
+    <script src="/deform/scripts/jquery-ui-timepicker-addon.js" type="text/javascript"></script>
+    
+    <script type="text/javascript">
+    var finish_renderer_load = function(){
+        var render_form = $(this);
+        
+        var action = render_form.attr('action');
+        
+        deform_loaded = false;
+        
+        deform.load();
+    }
+    
+    var load_renderer = function(){
+        var form = $('#renderer_form');
+        form.data('renderer', this.value);
+        form.load('/renderer?__renderer='+this.value, finish_renderer_load);
+    };
+    
+    $(document).ready(function() {
+        $('#renderer').change(load_renderer);
+    });
+    
+    </script>
+</head>
+
+<body>
+<form>
+Choose A Renderer:
+
+<select id="renderer">
+<option value="">-- Select --</option>
 {% for renderer in renderers %}
-    <dt>{{renderer}}</dt>
-    <dd>{{renderers[renderer].title}}</dd>
+    <option value="{{renderer}}" 
+    
+    {% if renderer == selected_renderer %}
+    selected="1"
+    {% endif %}
+    
+    >{{renderers[renderer].title}}</option>
 {% else %} 
-No Renderers Found.
+<option value="">No Renderers Found</option>
 {% endfor %}
-</dl>
+</select>
 </form>
+<div id="renderer_form">
+{{ renderer_form }}
+</div>
+<pre>
+{{ request.args|pprint(True) }}
+</pre>
+</body>

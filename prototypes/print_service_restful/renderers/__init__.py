@@ -13,14 +13,13 @@ class IRenderer(Interface):
     
     title = Attribute("Brief, but descriptive title for this renderer")
     settings = Attribute("Dictionary of lookup lists and other infrequently-configured settings, that can be overridden at run-time")
+    schema = Attribute("colander schema defining required inputs")
     
     def __call__(data):
         """
         Given the data, generate a printable file and return the path to it.
         """
-
-def register():
-    """
-    Add the renderer to the list of registered factories.
-    """
-    pass
+        
+        
+from .centered import CenteredPageRenderer
+from .issuecard import IssueCardRenderer

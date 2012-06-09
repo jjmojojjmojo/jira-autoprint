@@ -1,5 +1,6 @@
 from reportlab.platypus.flowables import Flowable
 from reportlab.pdfbase.pdfmetrics import stringWidth, getFont
+from reportlab.lib.colors import pink, black, red, blue, green, lightgrey, darkgrey
 
 def telemetry(font, size):
     """

@@ -49,6 +49,9 @@ Twisted Web:
     
 pycups:
     A library that wraps the CUPS C API. It's quite mature and Pythonic. It comes to us from Red Hat, and has been in use in Red Hat Linux for many years.
+    
+colander:
+    Schema library that comes from the Pylons project. Light-weight, good test coverage, and easy to use. Used to allow Renderers to explicitly state what sort of information they need, and provide a standard validation procedure.
 
 Configuration
 -------------
@@ -64,3 +67,56 @@ However, there's a requirement for basic user management. This is best implement
 This may change in the near future, but for now, we'll use SQLite, via the :mod:`twisted.enterprise.adapi` interface and :mod:`sqlite3` (built-in to Python 2.5+). This will allow us to move to a centralized database like PostgreSQL in the future. 
 
 There is currently no need for an ORM or any more advanced data interactions.
+
+URI Layout/RESTful Protocols
+============================
+The RESTful service interface will leverage the robust URI mapping features of :mod:`twisted.web`.
+
+Service Versioning
+------------------
+In the event that the service's REST API changes in some way in the future, we'll use a custom HTTP header to allow clients to indicate what version of the API they are expecting.
+
+.. todo::
+   This is different than what most REST APIs are doing currently. Most use a url path to indicate the version (e.g. http://my.api.com/v1/).
+
+URL Layout
+----------
+
++---------------------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+
+| Path                            | GET                             | POST                            | PUT                             | DELETE                          |
++=================================+=================================+=================================+=================================+=================================+
+| App Root (/)                    | Service status, API docs        | N/A                             | N/A                             | N/A                             |   
++---------------------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+
+| /status                         | Service status (JSON)           | N/A                             | N/A                             | N/A                             |   
++---------------------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+
+| /renderers                      | List of available renderers     |                                 |                                 |                                 |
+|                                 | (JSON)                          | N/A                             | N/A                             | N/A                             |  
++---------------------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+
+| /renderers/[renderer]           | Renderer's schema (JSON)        | Render and download (preview)   | Render and print                | N/A                             |   
++---------------------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+
+| /renderers/[renderer]/form      | HTML form                       | N/A                             | N/A                             | N/A                             |   
++---------------------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+
+| /oauth                          | Information about oAuth         | N/A                             | N/A                             | N/A                             |   
++---------------------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+
+| /oauth/request_token            | Auth request token              | N/A                             | N/A                             | N/A                             |   
++---------------------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+
+| /oauth/access_token             | N/A                             | Return credentials              | N/A                             | N/A                             |   
++---------------------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+
+
+URLs that are not part of the API
+---------------------------------
+
+.. todo::
+   Would it be best to provide a RESTful API for these bits too?
+   
+
++---------------------------------+---------------------------------------------------------------------------+
+| Path                            | Description                                                               |
++=================================+===========================================================================+
+| /admin                          | Manage users, authenticated clients, etc                                  |   
++---------------------------------+---------------------------------------------------------------------------+
+| /ui                             | HTML Front-end for users to the RESTful API                               |   
++---------------------------------+---------------------------------------------------------------------------+
+| /static                         | CSS/Javascript/image resources                                            |   
++---------------------------------+---------------------------------------------------------------------------+
+

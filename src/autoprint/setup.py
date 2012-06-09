@@ -27,9 +27,14 @@ setup(name='autoprint',
           'pycups',
           'reportlab',
           'twisted',
+          'colander',
+          'deform',
+          'jinja2',
           # -*- Extra requirements: -*-
       ],
       entry_points="""
       # -*- Entry points: -*-
+      [autoprint.renderers]
+      issuecard = autoprint.renderers.issuecard:IssueCardRenderer
       """,
       )

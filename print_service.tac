@@ -1,6 +1,6 @@
 from twisted.application import internet, service
 
-from print_service_restful import PrintService
+from autoprint.service import PrintService
 
 application = service.Application("autoprint")
 
