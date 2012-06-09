@@ -1,6 +1,12 @@
-# See http://peak.telecommunity.com/DevCenter/setuptools#namespace-packages
-try:
-    __import__('pkg_resources').declare_namespace(__name__)
-except ImportError:
-    from pkgutil import extend_path
-    __path__ = extend_path(__path__, __name__)
+"""
+Printing Service - listens for REST requests, dispatches a renderer to build
+a printable file, then sends it to CUPS
+"""
+import os
+from jinja2 import Environment, FileSystemLoader
+
+template_path = os.path.join(os.path.dirname(__file__), 'templates')
+
+static_path = os.path.join(template_path, 'static')
+
+templates = Environment(loader=FileSystemLoader(template_path))
