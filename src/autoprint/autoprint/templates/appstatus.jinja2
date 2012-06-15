@@ -1,6 +1,20 @@
-<h1>Autoprinter</h1>
+<h1>Autoprinter Status</h1>
 <h2>Printer Status</h2>
-TBD
+<dl>
+    <dt>Current Printer</dt>
+    <dd>{{ attributes['printer-info'] }}</dd>
+    <dt>Printer URI</dt>
+    <dd>{{ attributes['device-uri'] }}</dd>
+    <dt>Location</dt>
+    <dd>{{ attributes['printer-location'] }}</dd>
+    <dt>State</dt>
+    <dd>{{ attributes['printer-state'] }}</dd>
+</dl>
 
-<h2>Other Information?</h2>
-TBD
+<h2>Installed Renderers</h2>
+<dl>
+    {% for name, renderer in renderers.iteritems() %}
+    <dt>{{ renderer['title'] }} ({{ name }})</dt>
+    <dd>{{ renderer['description'] }}</dd>
+    {% endfor %}
+</dl>

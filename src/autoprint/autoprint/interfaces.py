@@ -36,11 +36,9 @@ class IRenderer(Interface):
     """
     Callable that creates a printable file (typically PDF), and returns a path 
     to that file.
-    
-    :note: It's expected that you will extend this interface and use zope.schema
-           to describe what data your renderer needs.
     """
     title = Attribute("Brief, but descriptive title for this renderer")
+    description = Attribute("More detail about what this renderer does")
     
     def validate(data):
         """

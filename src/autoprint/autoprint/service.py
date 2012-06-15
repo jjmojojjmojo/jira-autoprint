@@ -3,57 +3,11 @@ The Print Service
 """
 
 from twisted.web.server import Site, NOT_DONE_YET
-from twisted.python.filepath import FilePath
-from twisted.web.resource import Resource
-from twisted.web.static import File, NoRangeStaticProducer
-from util import JinjaTemplateResource
-from . import templates
 from twisted.internet.threads import deferToThread
-import cups, json
-
-class ServiceStatus(JinjaTemplateResource):
-    """
-    Display useful status information about the 
-    print service
-    
-    Returns HTML by default.
-    
-    :todo: return JSON as well with a URL param
-    """
-    isLeaf = True
-    
-    template = templates.get_template('appstatus.jinja2')
-    
-    def service_status(self, request):
-        """
-        Return a dictionary of service status information.
-        
-        :todo: Add in other useful information
-        """
-        d = request.transport.protocol.factory.printerStatus()
-        
-        return d
-    
-    def render_GET(self, request):
-        
-        return self.render_template(data, request)
-        
-class ServiceStatusJSON(ServiceStatus):
-    """
-    Alternate ServiceStatus
-    
-    Returns a JSON serialized body and sets the right header for JSON content
-    """
-    def render_GET(self, request):
-        d = self.service_status(request)
-        
-        def go(data):
-            request.setHeader('Content-type', 'application/json')
-            request.write(json.dumps(data, sort_keys=True, indent=4)
-        
-        d.addCallback(go)
-        
-        return NOT_DONE_YET
+from twisted.web.resource import Resource
+import cups, pkg_resources
+from resources import appstatus, renderers
+from util import loadRenderers
 
 class PrintService(Site):
     """
@@ -62,8 +16,17 @@ class PrintService(Site):
     """
     
     def __init__(self, **kwargs):
+        root = Resource()
+        
+        root.putChild("", appstatus.ServiceStatus())
+        root.putChild("status", appstatus.ServiceStatusJSON())
+        root.putChild("renderers", renderers.RendererAPI())
+        
+        Site.__init__(self, root, **kwargs)
+        
         self._connection = cups.Connection()
-        self.renderers = self.loadRenderers()
+        self.renderers = loadRenderers()
+
     
     def _printerStatus(self):
         """
@@ -80,3 +43,14 @@ class PrintService(Site):
     
     def printerStatus(self):
         return deferToThread(self._printerStatus)
+        
+    def printFile(self, path, title):
+        """
+        Send a file to the print queue.
+        """
+        
+        return deferToThread(self._connection.printFile,
+            title=title,           # title
+            printer=printer,       # the printer to use (it's name)
+            filename=path,         # file to print
+        )

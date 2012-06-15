@@ -1,24 +1,21 @@
 """
 Common utilities
 """
-from twisted.web.resource import Resource
+import pkg_resources
 
-class JinjaTemplateResource(Resource):
+def loadRenderers():
     """
-    Add jinja2 template processing functionality
+    Return a dictionary of all of the renderer objects installed.
     """
-    template = None # a Jinja2 template object - instantiate when building the class
+    entry_map = pkg_resources.get_entry_map('autoprint', 'autoprint.renderers')
     
-    def _render_template(self, data, request):
-        """
-        Callback to render the primary template from a deferred.
-        """
-        request.write(self.template.render(data).encode('utf-8'))
-        request.finish()
+    output = {}
+    for name, entry in entry_map.iteritems():
         
-    def render_template(self, data, request):
-        """
-        Render the primary template, deferred to a thread
-        """
-        d = deferToThread(self._render_template, data, request)
-        return NOT_DONE_YET
+        entry.require()
+        
+        class_ = entry.load()
+        
+        output[name] = class_()
+        
+    return output

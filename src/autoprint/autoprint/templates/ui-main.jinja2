@@ -1,0 +1,207 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+
+<head>
+    <title>
+        AutoPrint - Print A Document
+    </title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <link type="text/css" href="static/deform/css/form.css" rel="stylesheet" />
+    <link type="text/css" href="static/deform/css/ui-lightness/jquery-ui-1.8.11.custom.css" rel="stylesheet" />
+    
+    <script src="static/deform/scripts/jquery-1.7.2.min.js" type="text/javascript"></script>
+    <script src="static/deform/scripts/jquery.form-3.09.js" type="text/javascript"></script>
+    <script src="static/deform/scripts/deform.js" type="text/javascript"></script>
+    <script src="static/deform/scripts/jquery-ui-1.8.11.custom.min.js" type="text/javascript"></script>
+    <script src="static/jquery.fileDownload.js" type="text/javascript"></script>
+    <script src="static/deform/scripts/jquery-ui-timepicker-addon.js" type="text/javascript"></script>
+    <script type="text/javascript">
+    "use strict";
+    
+    var print_service_uri = "{{ print_service_uri }}";
+    var renderer = '';
+    
+    var buttons = { _button: ['Preview', 'Print']};
+    
+    var prep_form = function(data){
+        var prepped = new Object();
+        
+        var items = $('#renderer_form form').serializeArray();
+        
+        for(var i=0; i<items.length; i++){
+            var item = items[i];
+            prepped[item.name] = item.value;
+        }
+        
+        return prepped;
+    };
+    
+    var do_print = function(data){
+        var prepped = prep_form(data);
+    
+        $.ajax({
+                url: print_service_uri+"/renderers/"+renderer,
+                data: JSON.stringify(prepped),
+                type: 'PUT',
+                dataType: 'json',
+                traditional: true,
+                success: function(data){
+                    alert(data);
+                },
+                 xhrFields: {
+                   withCredentials: true
+                }
+        });
+    };
+    
+    var do_preview = function(data){
+        var prepped = prep_form(data);
+        
+        $.ajax({
+                url: print_service_uri+"/renderers/"+renderer,
+                data: JSON.stringify(prepped),
+                type: 'POST',
+                dataType: 'json',
+                traditional: true,
+                success: function(data){
+                    window.location.href = print_service_uri+"/renderers/"+renderer+"/"+data.printed
+                },
+                 xhrFields: {
+                   withCredentials: true
+                }
+        });
+    };
+    
+    var check = function(success){
+       /*
+        * Check that the form is valid. 
+        * 
+        * success is a function that will be called if the form checks out
+        *
+        * The remote API will set the status to 400 and return a form with 
+        * error indicators if it doesn't validate.
+        */
+        
+        var go = function(){
+            var data = $('#renderer_form form').serialize();
+            
+            // add on the buttons we want in the case we get
+            // an error form back
+            data = data + '&' + $.param(buttons, true);
+            
+            $.ajax({
+                url: print_service_uri+"/renderers/"+renderer+"/form" ,
+                data: data,
+                type: 'POST',
+                dataType: 'html',
+                success: function(data){
+                    render_form(data);
+                    success(data);
+                },
+                error: function(jqXHR, textStatus, errorThrown){
+                    // re-render the form if it's a 400, that means validation failed.
+                    // any other codes mean there's a real problem.
+                    if(jqXHR.status == 400){
+                        render_form(jqXHR.responseText);
+                    }
+                },
+                traditional: true,
+                xhrFields: {
+                   withCredentials: true
+                }
+            });
+        };
+            
+       return go
+    };
+    
+    var render_form = function(data){
+        /* 
+         * Render the returned form from the print service API
+         */
+        var container = $('#renderer_form');
+        container.html(data);
+        deform_loaded = false;
+        deform.load();
+        // override the submit event
+        container.find('form').submit(function(event){        
+                event.preventDefault();
+        });
+        
+        // attach handlers to the buttons
+        container.find('button#deformPrint').click(check(do_print));
+        container.find('button#deformPreview').click(check(do_preview));
+        
+    };
+    
+    var load_renderers = function(){
+        var select = $('#renderer');
+        
+        $.ajax( 
+            {   
+                type: 'GET',
+                url: print_service_uri+'/renderers',
+                success: function(data) {
+                    var obj = $(this);
+                    
+                    for (var i=0; i<data.length; i++){
+                        var renderer = data[i];
+                        var option = $("<option></option>");
+                        option.attr('value', renderer.name)
+                        option.html(renderer.title)
+                        obj.append(option);
+                    };
+                },
+                context: select,
+                crossDomain: true,
+                dataType: 'json',
+                xhrFields: {
+                   withCredentials: true
+                }
+            }
+             
+        );
+    };
+    
+    var load_renderer_form = function(){
+        var select = $(this);
+        
+        renderer = select.val();
+        
+        if (renderer == ""){
+            return;
+        }
+        
+        $.ajax({
+            url: print_service_uri+"/renderers/"+renderer+"/form" ,
+            data: buttons,
+            dataType: 'html',
+            success: render_form,
+            traditional: true,
+             xhrFields: {
+                   withCredentials: true
+                }
+        });
+    };
+    
+    $(document).ready(function() {
+        load_renderers();
+        
+        $('#renderer').change(load_renderer_form);
+    });
+    </script>
+</head>
+<body>
+<h1>Print UI</h1>
+<label for="rednerer">
+Select a Renderer:
+</label>
+<select id="renderer">
+<option value="">------ select -----</option>
+</select>
+<div id="renderer_form">
+</div>
+</body>
+</html>
