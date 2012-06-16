@@ -72,6 +72,12 @@ class JSONResource(Resource):
         pass
     
     def render(self, request):
+        request.setHeader('access-control-allow-origin', request.getHeader('origin'))
+        request.setHeader('access-control-allow-credentials', 'true')
+        request.setHeader("access-control-allow-methods", "POST, GET, OPTIONS, PUT")
+        request.setHeader("access-control-max-age", "1728000")
+        request.setHeader("access-control-allow-headers",  "content-type")
+
         
         if request.method in ('POST', 'PUT'):
             self._data = json.loads(request.content.getvalue())
@@ -87,10 +93,16 @@ class JSONResource(Resource):
         
     def render_GET(self, request):
         request.setHeader('content-type', 'application/json')
-        request.setHeader('access-control-allow-origin', request.getHeader('origin'))
-        request.setHeader('access-control-allow-credentials', 'true')
         
         request.write(json.dumps(self._data, sort_keys=True, indent=4, cls=ResourceEncoder))
+        request.finish()
+        
+    def render_OPTIONS(self, request):
+        
+        request.setResponseCode(200)
+        
+        request.setHeader('content-type', 'text/plain')
+        
         request.finish()
 
    

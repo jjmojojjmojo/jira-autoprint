@@ -143,7 +143,7 @@ class Renderer(JSONResource):
                 self._data = {'printed': unique_id}
             else:
                 # PUT
-                d = self.request.protocol.factory.printFile(filename, self.request.title)
+                d = request.transport.protocol.factory.printFile(filename, self._renderer.title)
                 
                 def result(jobid):
                     self._data = {

@@ -26,6 +26,7 @@ class PrintService(Site):
         
         self._connection = cups.Connection()
         self.renderers = loadRenderers()
+        self.printer = self._connection.getDefault()
 
     
     def _printerStatus(self):
@@ -51,6 +52,7 @@ class PrintService(Site):
         
         return deferToThread(self._connection.printFile,
             title=title,           # title
-            printer=printer,       # the printer to use (it's name)
+            printer=self.printer,       # the printer to use (it's name)
             filename=path,         # file to print
+            options={},
         )
