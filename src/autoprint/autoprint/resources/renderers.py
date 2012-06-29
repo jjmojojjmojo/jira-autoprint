@@ -118,7 +118,7 @@ class Renderer(JSONResource):
             to_serve = info.get(name, {'filename':None})
             
             if to_serve['filename']:
-                return File(to_serve)
+                return File(to_serve['filename'])
             else:
                 return NoResource()     
                 
@@ -146,6 +146,7 @@ class Renderer(JSONResource):
             
             if request.method == 'POST':
                 self._data = {'printed': unique_id}
+                return self.render_GET(request)
             else:
                 # PUT
                 d = request.transport.protocol.factory.printFile(filename, self._renderer.title)

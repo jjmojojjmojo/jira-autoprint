@@ -28,7 +28,7 @@ icons = {
     'Operational Task': 'cards-heart.png',
     'Task': 'agt_utilities.png',
     'Story': 'agt_utilities.png',
-    'Epic': 'agt_utilities.png',
+    'Epic': 'globe2.png',
     'Improvement': 'agt_utilities.png',
     'Bug': 'tools-report-bug.png',
     'Unknown': 'agt_utilities.png',
