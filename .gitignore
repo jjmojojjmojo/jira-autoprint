@@ -41,4 +41,5 @@ pip-log.txt
 # Jedit temp files
 *~
 
-
+# PDFs in the prototypes directory
+prototypes/*.pdf

@@ -141,7 +141,11 @@ class Renderer(JSONResource):
                 'filename': filename,
                 'printed': datetime.now(),
                 'ip': request.getClientIP(),
-                'renderer': self._renderer.title,
+                'renderer': {
+                    'title':self._renderer.title,
+                    'id': self._renderer.name,
+                },
+                
             }
             
             if request.method == 'POST':
@@ -208,8 +212,21 @@ class RendererPrintedList(JSONResource):
     Returns a dictionary of printed items via JSON
     """
     def _adjust_data(self, request):
+        session = request.getSession()
         info = IPrintedFiles(session)
-        self._data = info
+        
+        # filter out any possibly sensitive data (e.g. the filename)
+        to_return = []
+        
+        for uid, printed in info.iteritems():
+            
+            to_return.append({
+                    'printed': printed['printed'].isoformat(),
+                    'renderer': printed['renderer'],
+                    'uid': uid,
+            })
+        
+        self._data = to_return
     
 
 class RendererAPI(Resource):
@@ -234,6 +251,8 @@ class RendererAPI(Resource):
             renderers = request.transport.protocol.factory.renderers
             
             renderer = renderers.get(name, None)
+            
+            renderer.name = name
             
             if not renderer:
                 return NoResource()

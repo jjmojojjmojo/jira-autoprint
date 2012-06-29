@@ -21,6 +21,7 @@
     "use strict";
     
     var print_service_uri = "{{ print_service_uri }}";
+    var print_history_uri = print_service_uri+"/history";
     var renderer = '';
     
     var buttons = { _button: ['Preview', 'Print']};
@@ -69,7 +70,7 @@
                 dataType: 'json',
                 traditional: true,
                 success: function(data){
-                    window.location.href = print_service_uri+"/renderers/"+renderer+"/"+data.printed
+                    $("iframe#downloader").attr('src', print_service_uri+"/renderers/"+renderer+"/"+data.printed);
                 },
                  xhrFields: {
                    withCredentials: true
@@ -100,6 +101,7 @@
                 type: 'POST',
                 dataType: 'html',
                 success: function(data){
+                    load_history();
                     render_form(data);
                     success(data);
                 },
@@ -117,7 +119,7 @@
             });
         };
             
-       return go
+       return go;
     };
     
     var render_form = function(data){
@@ -189,11 +191,48 @@
         });
     };
     
+    var display_history = function(data){
+        var div = $('#printed_area');
+        var info = $('<table><tbody><tr><td>ID</td><td>Printed</td><td>Link</td></tr></tbody></table>');
+        for (var i=0; i<data.length; i++){
+            var tr = $('<tr><td></td><td></td><td></td></tr>');
+            var cells = tr.children('td');
+            
+            var entry = data[i];
+            
+            $(cells[0]).html(i);
+            $(cells[1]).html(entry.printed);
+            
+            var link = $('<a></a>');
+            link.attr('href', print_service_uri+"/renderers/"+entry.renderer.id+"/"+uid);
+            link.attr('target', '_blank');
+            link.html(entry.uid);
+            $(cells[2]).append(link);
+            info.find('tbody').append(tr);
+        }
+        
+        div.html(info);
+    }
+    
+    var load_history = function() {
+        $.ajax({
+            url: print_service_uri+"/history",
+            type: 'GET',
+            dataType: 'json',
+            success: display_history,
+            traditional: true,
+             xhrFields: {
+                   withCredentials: true
+                }
+        });
+    };
+    
     $(document).ready(function() {
         load_renderers();
         
         $('#renderer').change(load_renderer_form);
         
+        load_history();
  
     });
     </script>
@@ -210,6 +249,23 @@
         padding: 10px;
         float: right;
     }
+    
+    #printed_area > table {
+        border: 1px black solid;
+        border-collapse: collapse;
+    }
+    
+    #printed_area > td {
+        border: inherit;
+    }
+    
+    #downloader {
+        position: absolute;
+        left: -100px;
+        width: 50px;
+        height: 50px;
+    }
+   
     </style>
 </head>
 <body>
@@ -226,5 +282,9 @@
     <div id="renderer_form">
     </div>
 </div>
+<br />
+<br />
+<iframe id="downloader">
+</iframe>
 </body>
 </html>

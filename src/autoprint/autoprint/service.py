@@ -21,6 +21,7 @@ class PrintService(Site):
         root.putChild("", appstatus.ServiceStatus())
         root.putChild("status", appstatus.ServiceStatusJSON())
         root.putChild("renderers", renderers.RendererAPI())
+        root.putChild("history", renderers.RendererPrintedList())
         
         Site.__init__(self, root, **kwargs)
         
