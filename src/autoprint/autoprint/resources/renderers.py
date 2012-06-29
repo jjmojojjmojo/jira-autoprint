@@ -15,6 +15,7 @@ from twisted.python.filepath import FilePath
 from twisted.web.error import NoResource
 from deform import Form, ValidationFailure
 import colander
+from datetime import datetime
 
 def flatten_args(request):
     """
@@ -114,10 +115,9 @@ class Renderer(JSONResource):
         else:
             info = IPrintedFiles(session)
             
-            to_serve = info.get(name, None)
+            to_serve = info.get(name, {'filename':None})
             
-            
-            if to_serve:
+            if to_serve['filename']:
                 return File(to_serve)
             else:
                 return NoResource()     
@@ -137,7 +137,12 @@ class Renderer(JSONResource):
             
             unique_id = str(uuid.uuid4().hex)
             
-            info[unique_id] = filename
+            info[unique_id] = {
+                'filename': filename,
+                'printed': datetime.now(),
+                'ip': request.getClientIP(),
+                'renderer': self._renderer.title,
+            }
             
             if request.method == 'POST':
                 self._data = {'printed': unique_id}
@@ -196,6 +201,14 @@ class RendererList(JSONResource):
                  'title': renderer.title,
                  'description': renderer.description,
             })
+
+class RendererPrintedList(JSONResource):
+    """
+    Returns a dictionary of printed items via JSON
+    """
+    def _adjust_data(self, request):
+        info = IPrintedFiles(session)
+        self._data = info
     
 
 class RendererAPI(Resource):

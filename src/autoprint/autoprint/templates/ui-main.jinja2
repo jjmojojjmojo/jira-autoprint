@@ -193,18 +193,38 @@
         load_renderers();
         
         $('#renderer').change(load_renderer_form);
+        
+ 
     });
     </script>
+    <style type="text/css">
+    #renderer_area {
+        width: 60%;
+        border: 3px #999999 double;
+        padding: 10px;
+        float: left;
+    }
+    #printed_area {
+        width: 30%;
+        border: 3px #999999 double;
+        padding: 10px;
+        float: right;
+    }
+    </style>
 </head>
 <body>
 <h1>Print UI</h1>
-<label for="rednerer">
-Select a Renderer:
-</label>
-<select id="renderer">
-<option value="">------ select -----</option>
-</select>
-<div id="renderer_form">
+<div id="printed_area">
+</div>
+<div id="renderer_area">
+    <label for="rednerer">
+    Select a Renderer:
+    </label>
+    <select id="renderer">
+    <option value="">------ select -----</option>
+    </select>
+    <div id="renderer_form">
+    </div>
 </div>
 </body>
 </html>

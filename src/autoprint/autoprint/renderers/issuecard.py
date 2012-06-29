@@ -51,6 +51,7 @@ class IssueCardRendererSchema(colander.MappingSchema):
         colander.String(),
         title=u"Details",
         description=u"Elaborated details about the issue.",
+        widget=deform.widget.TextAreaWidget(),
     )
     
     issue_id = colander.SchemaNode(
@@ -64,6 +65,7 @@ class IssueCardRendererSchema(colander.MappingSchema):
         validator=colander.OneOf(ISSUE_TYPES),
         missing = u'Unknown',
         default = u'Unknown',
+        widget=deform.widget.SelectWidget(values=[(x, x) for x in ISSUE_TYPES]),
     )
     
     reporter = colander.SchemaNode(
@@ -85,6 +87,7 @@ class IssueCardRendererSchema(colander.MappingSchema):
         description=u"How urgent is this issue?",
         missing = u'Unknown',
         default = u'Unknown',
+        widget=deform.widget.SelectWidget(values=[(x, x) for x in ISSUE_PRIORITIES]),
     )
     
     border = colander.SchemaNode(

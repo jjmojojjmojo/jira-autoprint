@@ -6,3 +6,4 @@ Automatic Printing from JIRA issues
    README
    print_service
    print_service_tech
+   jira_service
