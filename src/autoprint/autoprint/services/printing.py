@@ -2,20 +2,27 @@
 The Print Service
 """
 
-from twisted.web.server import Site, NOT_DONE_YET
+from twisted.web.server import NOT_DONE_YET
+from . import ConfigurableSite
 from twisted.internet.threads import deferToThread
 from twisted.web.resource import Resource
 import cups, pkg_resources
-from resources import appstatus, renderers
-from util import loadRenderers
+from ..resources import appstatus, renderers
+from ..util import loadRenderers
 
-class PrintService(Site):
+class PrintService(ConfigurableSite):
     """
     Twisted service that provides a simplified RESTful API to turn structured
     requests into physical paper via CUPS
     """
+    _defaults = {
+        'imagemagick_path': None,
+        'thumbnail_width': None,
+        'printer_to_use': None,
+        'working_directory': None,
+    }
     
-    def __init__(self, **kwargs):
+    def root(self):
         root = Resource()
         
         root.putChild("", appstatus.ServiceStatus())
@@ -23,7 +30,10 @@ class PrintService(Site):
         root.putChild("renderers", renderers.RendererAPI())
         root.putChild("history", renderers.RendererPrintedList())
         
-        Site.__init__(self, root, **kwargs)
+        return root
+    
+    def __init__(self, **kwargs):
+        ConfigurableSite.__init__(self, **kwargs)
         
         self._connection = cups.Connection()
         self.renderers = loadRenderers()
